@@ -1,0 +1,126 @@
+-- SpotOn CMS local cache schema
+
+CREATE TABLE IF NOT EXISTS ProductCache (
+    id INTEGER NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL DEFAULT '',
+    sku TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'publish',
+    regular_price TEXT NOT NULL DEFAULT '',
+    sale_price TEXT NOT NULL DEFAULT '',
+    price TEXT NOT NULL DEFAULT '',
+    stock_quantity INTEGER,
+    stock_status TEXT NOT NULL DEFAULT 'instock',
+    manage_stock INTEGER NOT NULL DEFAULT 0,
+    last_synced INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS OrderCache (
+    id INTEGER NOT NULL PRIMARY KEY,
+    number TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'pending',
+    date_created TEXT NOT NULL DEFAULT '',
+    total TEXT NOT NULL DEFAULT '0.00',
+    currency_symbol TEXT NOT NULL DEFAULT '€',
+    billing_name TEXT NOT NULL DEFAULT '',
+    billing_email TEXT NOT NULL DEFAULT '',
+    payment_method TEXT NOT NULL DEFAULT '',
+    last_synced INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS ArticleCache (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'draft',
+    author_id INTEGER NOT NULL DEFAULT 0,
+    date_created TEXT NOT NULL DEFAULT '',
+    featured_media_url TEXT,
+    last_synced INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS ArticleDraft (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    wp_id INTEGER, -- Null if new post, otherwise matches WP ID
+    title TEXT NOT NULL DEFAULT '',
+    content TEXT NOT NULL DEFAULT '',
+    last_modified INTEGER NOT NULL DEFAULT 0
+);
+
+-- Queries
+
+getProducts:
+SELECT * FROM ProductCache ORDER BY name ASC;
+
+getProductById:
+SELECT * FROM ProductCache WHERE id = ?;
+
+getProductBySku:
+SELECT * FROM ProductCache WHERE sku = ?;
+
+insertProduct:
+INSERT OR REPLACE INTO ProductCache(id, name, slug, sku, status, regular_price, sale_price, price, stock_quantity, stock_status, manage_stock, last_synced)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteAllProducts:
+DELETE FROM ProductCache;
+
+getOrders:
+SELECT * FROM OrderCache ORDER BY id DESC;
+
+getOrderById:
+SELECT * FROM OrderCache WHERE id = ?;
+
+insertOrder:
+INSERT OR REPLACE INTO OrderCache(id, number, status, date_created, total, currency_symbol, billing_name, billing_email, payment_method, last_synced)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteAllOrders:
+DELETE FROM OrderCache;
+
+-- Article Queries
+
+getArticles:
+SELECT * FROM ArticleCache ORDER BY id DESC;
+
+getArticleById:
+SELECT * FROM ArticleCache WHERE id = ?;
+
+insertArticle:
+INSERT OR REPLACE INTO ArticleCache(id, title, content, status, author_id, date_created, featured_media_url, last_synced)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+updateArticle:
+UPDATE ArticleCache 
+SET title = ?, content = ?, status = ?
+WHERE id = ?;
+
+deleteArticle:
+DELETE FROM ArticleCache WHERE id = ?;
+
+deleteAllArticles:
+DELETE FROM ArticleCache;
+
+-- Draft Queries
+
+getDrafts:
+SELECT * FROM ArticleDraft ORDER BY last_modified DESC;
+
+getDraftByWpId:
+SELECT * FROM ArticleDraft WHERE wp_id = ?;
+
+getDraftById:
+SELECT * FROM ArticleDraft WHERE id = ?;
+
+insertDraft:
+INSERT OR REPLACE INTO ArticleDraft(id, wp_id, title, content, last_modified)
+VALUES (?, ?, ?, ?, ?);
+
+deleteDraft:
+DELETE FROM ArticleDraft WHERE id = ?;
+
+deleteDraftByWpId:
+DELETE FROM ArticleDraft WHERE wp_id = ?;
+
+deleteAllDrafts:
+DELETE FROM ArticleDraft;
