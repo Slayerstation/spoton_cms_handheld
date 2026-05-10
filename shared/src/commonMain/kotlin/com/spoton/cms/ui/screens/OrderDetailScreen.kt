@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import com.spoton.cms.domain.model.OrderStatus
 import com.spoton.cms.navigation.components.OrderDetailComponent
 import com.spoton.cms.ui.theme.GlassColors
@@ -29,6 +31,7 @@ import com.spoton.cms.ui.theme.SpotOnOrange
 @Composable
 fun OrderDetailScreen(component: OrderDetailComponent) {
     val state by component.state.collectAsState()
+    val clipboardManager = LocalClipboardManager.current
 
     Scaffold(
         topBar = {
@@ -37,6 +40,15 @@ fun OrderDetailScreen(component: OrderDetailComponent) {
                 navigationIcon = {
                     IconButton(onClick = component.onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    state.order?.number?.let { number ->
+                        IconButton(onClick = { 
+                            clipboardManager.setText(AnnotatedString(number))
+                        }) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy Order Number", tint = SpotOnOrange)
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)

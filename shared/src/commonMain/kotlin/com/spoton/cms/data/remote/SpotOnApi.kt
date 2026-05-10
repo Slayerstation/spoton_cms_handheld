@@ -18,42 +18,35 @@ import kotlinx.serialization.Serializable
  * and the custom cms/v1 bridge for options/styles.
  */
 class SpotOnApi(
-    private val httpClient: HttpClient,
+    internal val httpClient: HttpClient,
     private val baseUrlProvider: () -> String
 ) {
-    private val baseUrl: String get() = baseUrlProvider()
+    internal val baseUrl: String get() = baseUrlProvider()
     private val wcApi: String get() = "$baseUrl/wp-json/wc/v3"
     private val wpApi: String get() = "$baseUrl/wp-json/wp/v2"
     private val cmsApi: String get() = "$baseUrl/wp-json/cms/v1"
-    private val graphqlUrl: String get() = "$baseUrl/graphql"
+    private val jwtApi: String get() = "$baseUrl/wp-json/jwt-auth/v1"
 
     // ── Authentication ──────────────────────────────────────────────
 
     suspend fun login(username: String, password: String): AuthToken {
-        val response: GraphQLResponse<LoginData> = httpClient.post(graphqlUrl) {
+        val response = httpClient.post("$jwtApi/token") {
             contentType(ContentType.Application.Json)
-            setBody(GraphQLRequest(
-                query = """
-                    mutation Login(${'$'}username: String!, ${'$'}password: String!) {
-                        login(input: { username: ${'$'}username, password: ${'$'}password }) {
-                            authToken
-                            refreshToken
-                            user {
-                                id
-                                name
-                                email
-                            }
-                        }
-                    }
-                """.trimIndent(),
-                variables = mapOf("username" to username, "password" to password)
+            setBody(mapOf(
+                "username" to username,
+                "password" to password
             ))
-        }.body()
+        }
 
-        return AuthToken(
-            token = response.data.login.authToken,
-            refreshToken = response.data.login.refreshToken
-        )
+        if (response.status != HttpStatusCode.OK) {
+            // Attempt to parse the WP error message
+            val errorBody = response.body<Map<String, kotlinx.serialization.json.JsonElement>>()
+            val message = errorBody["message"]?.toString()?.removeSurrounding("\"") 
+                ?: "Login failed (${response.status.value})"
+            throw Exception(message)
+        }
+
+        return response.body()
     }
 
     // ── Products ────────────────────────────────────────────────────
@@ -172,39 +165,11 @@ class SpotOnApi(
     }
 
     // ── System ──────────────────────────────────────────────────────
-
-    suspend fun getSystemInfo(): Map<String, Any> {
+    
+    suspend fun getSystemInfo(): com.spoton.cms.domain.model.BackendSystemInfo {
         return httpClient.get("$cmsApi/system").body()
     }
 }
-
-// ── GraphQL Request/Response Models ─────────────────────────────────
-
-@Serializable
-data class GraphQLRequest(
-    val query: String,
-    val variables: Map<String, String> = emptyMap()
-)
-
-@Serializable
-data class GraphQLResponse<T>(val data: T)
-
-@Serializable
-data class LoginData(val login: LoginPayload)
-
-@Serializable
-data class LoginPayload(
-    val authToken: String,
-    val refreshToken: String? = null,
-    val user: GraphQLUser? = null
-)
-
-@Serializable
-data class GraphQLUser(
-    val id: String,
-    val name: String,
-    val email: String? = null
-)
 
 @Serializable
 data class OptionResponse(

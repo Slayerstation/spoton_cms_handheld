@@ -1,0 +1,23 @@
+{
+  "name": "SpotOn CMS Source",
+  "identifier": "com.spoton.cms.source",
+  "subtitle": "Alternative App Store for SpotOn CMS",
+  "description": "Distribution source for the SpotOn CMS Handheld application.",
+  "iconURL": "https://raw.githubusercontent.com/username/repo/main/assets/logo.png",
+  "apps": [
+    {
+      "name": "SpotOn CMS",
+      "bundleIdentifier": "com.myapplication.MyApplication",
+      "developerName": "SpotOn",
+      "version": "1.0.0",
+      "versionDate": "2026-05-06T10:30:00Z",
+      "versionDescription": "Initial AltStore distribution setup.",
+      "downloadURL": "https://github.com/username/repo/releases/latest/download/iosApp.ipa",
+      "localizedDescription": "Handheld application for managing SpotOn CMS orders and products.",
+      "iconURL": "https://raw.githubusercontent.com/username/repo/main/assets/logo.png",
+      "tintColor": "#007AFF",
+      "size": 0,
+      "screenshotURLs": []
+    }
+  ]
+}

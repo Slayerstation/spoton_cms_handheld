@@ -12,20 +12,14 @@ class AuthRepository(
     val currentServerUrl: String get() = settings.serverUrl
 
     suspend fun login(serverUrl: String, username: String, password: String): Result<AuthToken> {
-        // MOCK LOGIN BYPASS for demo purposes
-        if (username == "admin" && password == "password") {
-            settings.serverUrl = serverUrl.trimEnd('/')
-            settings.jwtToken = "mock_jwt_token"
-            settings.username = "Admin Demo"
-            return Result.success(AuthToken("mock_jwt_token", "mock_refresh_token"))
-        }
-
         return try {
             settings.serverUrl = serverUrl.trimEnd('/')
             val token = api.login(username, password)
+            
             settings.jwtToken = token.token
-            settings.refreshToken = token.refreshToken
-            settings.username = username
+            // JWT plugin doesn't have refresh token by default, so we check for null
+            token.userDisplayName?.let { settings.username = it }
+            
             Result.success(token)
         } catch (e: Exception) {
             Result.failure(e)

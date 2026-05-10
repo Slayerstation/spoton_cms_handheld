@@ -3,8 +3,10 @@ package com.spoton.cms.navigation.components
 import com.arkivanov.decompose.ComponentContext
 import com.spoton.cms.data.repository.OrderRepository
 import com.spoton.cms.data.repository.ProductRepository
+import com.spoton.cms.data.repository.StoreSettingsRepository
 import com.spoton.cms.domain.model.Order
 import com.spoton.cms.domain.model.OrderStatus
+import com.spoton.cms.domain.model.BackendSystemInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,17 +24,23 @@ class DashboardComponent(
     val onNavigateToInventory: () -> Unit,
     val onNavigateToArticles: () -> Unit,
     val onNavigateToStyles: () -> Unit,
+    val onNavigateToSettings: () -> Unit,
+    val onNavigateToChat: () -> Unit,
+    val onNavigateToContent: () -> Unit,
+    val onNavigateToBookkeeping: () -> Unit,
     val onLogout: () -> Unit
 ) : ComponentContext by componentContext, KoinComponent {
 
     private val orderRepository: OrderRepository by inject()
     private val productRepository: ProductRepository by inject()
+    private val settingsRepository: StoreSettingsRepository by inject()
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     data class State(
         val recentOrders: List<Order> = emptyList(),
         val pendingOrderCount: Int = 0,
         val totalProducts: Int = 0,
+        val systemInfo: BackendSystemInfo? = null,
         val isLoading: Boolean = true,
         val error: String? = null
     )
@@ -54,11 +62,13 @@ class DashboardComponent(
                     status = OrderStatus.PROCESSING
                 )
                 val productsResult = productRepository.getProducts(perPage = 1)
+                val systemResult = settingsRepository.getSystemInfo()
 
                 _state.value = _state.value.copy(
                     recentOrders = ordersResult.getOrDefault(emptyList()),
                     pendingOrderCount = pendingResult.getOrDefault(emptyList()).size,
                     totalProducts = productsResult.getOrDefault(emptyList()).size,
+                    systemInfo = systemResult.getOrNull(),
                     isLoading = false,
                     error = null
                 )

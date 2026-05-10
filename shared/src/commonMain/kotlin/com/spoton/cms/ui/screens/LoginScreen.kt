@@ -1,6 +1,7 @@
 package com.spoton.cms.ui.screens
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,12 +18,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spoton.cms.navigation.components.LoginComponent
 import com.spoton.cms.ui.theme.GlassColors
 import com.spoton.cms.ui.theme.SpotOnOrange
+import org.jetbrains.compose.resources.painterResource
+import spotoncms.shared.generated.resources.Res
+import spotoncms.shared.generated.resources.spoton_logo
 
 @Composable
 fun LoginScreen(component: LoginComponent) {
@@ -64,13 +73,13 @@ fun LoginScreen(component: LoginComponent) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Logo / Brand
-            Text(
-                text = "SpotOn",
-                style = MaterialTheme.typography.displayLarge.copy(
-                    fontWeight = FontWeight.Black,
-                    fontSize = 42.sp
-                ),
-                color = SpotOnOrange
+            Image(
+                painter = painterResource(Res.drawable.spoton_logo),
+                contentDescription = "SpotOn Logo",
+                modifier = Modifier
+                    .size(180.dp)
+                    .padding(bottom = 8.dp),
+                contentScale = ContentScale.Fit
             )
 
             Text(
@@ -93,33 +102,22 @@ fun LoginScreen(component: LoginComponent) {
                     .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = "Sign in to your store",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                // Server URL
-                OutlinedTextField(
-                    value = state.serverUrl,
-                    onValueChange = component::onServerUrlChanged,
-                    label = { Text("Server URL") },
-                    placeholder = { Text("https://your-store.com") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Uri,
-                        imeAction = ImeAction.Next
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = SpotOnOrange,
-                        unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
-                        cursorColor = SpotOnOrange
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                // Login Header
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Sign in to your store",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Secure JWT Authentication Active",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF4CAF50) // Success Green
+                    )
+                }
 
                 // Username
                 OutlinedTextField(
@@ -138,12 +136,22 @@ fun LoginScreen(component: LoginComponent) {
                 )
 
                 // Password
+                var passwordVisible by remember { mutableStateOf(false) }
                 OutlinedTextField(
                     value = state.password,
                     onValueChange = component::onPasswordChanged,
                     label = { Text("Password") },
                     singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = if (passwordVisible) "Hide password" else "Show password",
+                                tint = Color.White.copy(alpha = 0.5f)
+                            )
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
                         imeAction = ImeAction.Done
@@ -205,6 +213,37 @@ fun LoginScreen(component: LoginComponent) {
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
+                        )
+                    }
+                }
+
+                // Advanced Settings (Collapsible)
+                var showAdvanced by remember { mutableStateOf(false) }
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    TextButton(
+                        onClick = { showAdvanced = !showAdvanced },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) {
+                        Text(
+                            text = if (showAdvanced) "Hide Advanced" else "Advanced Settings",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.4f)
+                        )
+                    }
+
+                    AnimatedVisibility(visible = showAdvanced) {
+                        OutlinedTextField(
+                            value = state.serverUrl,
+                            onValueChange = component::onServerUrlChanged,
+                            label = { Text("Backend URL") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            textStyle = MaterialTheme.typography.bodySmall,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = SpotOnOrange.copy(alpha = 0.5f),
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.1f)
+                            ),
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
                         )
                     }
                 }

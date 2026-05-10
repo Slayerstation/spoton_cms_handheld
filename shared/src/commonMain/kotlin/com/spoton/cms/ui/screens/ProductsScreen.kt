@@ -16,7 +16,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.spoton.cms.navigation.components.ProductsComponent
@@ -27,6 +31,7 @@ import com.spoton.cms.ui.theme.SpotOnOrange
 @Composable
 fun ProductsScreen(component: ProductsComponent) {
     val state by component.state.collectAsState()
+    val clipboardManager = LocalClipboardManager.current
 
     Scaffold(
         topBar = {
@@ -62,6 +67,14 @@ fun ProductsScreen(component: ProductsComponent) {
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
+        val focusRequester = remember { FocusRequester() }
+
+        LaunchedEffect(Unit) {
+            if (!state.isSelectionMode) {
+                focusRequester.requestFocus()
+            }
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -76,12 +89,19 @@ fun ProductsScreen(component: ProductsComponent) {
                     placeholder = { Text("Search products...") },
                     singleLine = true,
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = SpotOnOrange) },
+                    trailingIcon = {
+                        if (state.searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { component.onSearchQueryChanged("") }) {
+                                Icon(Icons.Default.Clear, contentDescription = "Clear", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                            }
+                        }
+                    },
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = SpotOnOrange,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -93,7 +113,8 @@ fun ProductsScreen(component: ProductsComponent) {
             } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     items(state.products) { product ->
                         val isSelected = state.selectedIds.contains(product.id)
@@ -130,11 +151,25 @@ fun ProductsScreen(component: ProductsComponent) {
                                     )
                                 )
                                 if (product.sku.isNotBlank()) {
-                                    Text(
-                                        text = "SKU: ${product.sku}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        modifier = Modifier.clickable { 
+                                            clipboardManager.setText(AnnotatedString(product.sku))
+                                        }
+                                    ) {
+                                        Text(
+                                            text = "SKU: ${product.sku}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                        )
+                                        Icon(
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = "Copy SKU",
+                                            tint = SpotOnOrange.copy(alpha = 0.5f),
+                                            modifier = Modifier.size(10.dp)
+                                        )
+                                    }
                                 }
                             }
                             Column(horizontalAlignment = Alignment.End) {
@@ -146,12 +181,59 @@ fun ProductsScreen(component: ProductsComponent) {
                                     color = SpotOnOrange
                                 )
                                 product.stockQuantity?.let { qty ->
-                                    Text(
-                                        text = "$qty in stock",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (qty <= 5) MaterialTheme.colorScheme.error
-                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        IconButton(
+                                            onClick = { component.quickUpdateStock(product.id, -1) },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(Icons.Default.Remove, "Decrease", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))
+                                        }
+                                        
+                                        if (qty == 0) {
+                                            Surface(
+                                                color = MaterialTheme.colorScheme.error,
+                                                shape = RoundedCornerShape(8.dp)
+                                            ) {
+                                                Text(
+                                                    text = "OUT",
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                    color = Color.White,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        } else {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                if (qty <= 5) {
+                                                    Surface(
+                                                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                                                        shape = RoundedCornerShape(8.dp),
+                                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = "$qty LOW",
+                                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                            color = MaterialTheme.colorScheme.error,
+                                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                                        )
+                                                    }
+                                                } else {
+                                                    Text(
+                                                        text = "$qty",
+                                                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                        color = MaterialTheme.colorScheme.onSurface,
+                                                        modifier = Modifier.padding(horizontal = 8.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        
+                                        IconButton(
+                                            onClick = { component.quickUpdateStock(product.id, 1) },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(Icons.Default.Add, "Increase", tint = SpotOnOrange, modifier = Modifier.size(16.dp))
+                                        }
+                                    }
                                 }
                             }
                         }

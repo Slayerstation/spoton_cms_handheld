@@ -1,5 +1,6 @@
 package com.spoton.cms.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +9,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +26,9 @@ import androidx.compose.ui.unit.sp
 import com.spoton.cms.navigation.components.DashboardComponent
 import com.spoton.cms.ui.theme.GlassColors
 import com.spoton.cms.ui.theme.SpotOnOrange
+import org.jetbrains.compose.resources.painterResource
+import spotoncms.shared.generated.resources.Res
+import spotoncms.shared.generated.resources.spoton_logo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,18 +39,26 @@ fun DashboardScreen(component: DashboardComponent) {
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(
-                            text = "SpotOn CMS",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(Res.drawable.spoton_logo),
+                            contentDescription = "SpotOn Logo",
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "SpotOn CMS",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
                             )
-                        )
-                        Text(
-                            text = "Dashboard",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
+                            Text(
+                                text = "Dashboard",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
                     }
                 },
                 actions = {
@@ -93,6 +107,13 @@ fun DashboardScreen(component: DashboardComponent) {
                 }
             }
 
+            // System Health row
+            state.systemInfo?.let { system ->
+                item {
+                    SystemHealthCard(system)
+                }
+            }
+
             // Quick actions
             item {
                 Text(
@@ -123,7 +144,7 @@ fun DashboardScreen(component: DashboardComponent) {
                     QuickActionCard(
                         title = "Orders",
                         subtitle = "Track and manage customer orders",
-                        icon = Icons.Default.List,
+                        icon = Icons.AutoMirrored.Filled.List,
                         color = Color(0xFF2196F3),
                         onClick = component.onNavigateToOrders
                     )
@@ -140,6 +161,34 @@ fun DashboardScreen(component: DashboardComponent) {
                         icon = Icons.Default.Palette,
                         color = Color(0xFF9C27B0),
                         onClick = component.onNavigateToStyles
+                    )
+                    QuickActionCard(
+                        title = "Settings",
+                        subtitle = "Universal shop, legal & integration config",
+                        icon = Icons.Default.Settings,
+                        color = Color(0xFF607D8B),
+                        onClick = component.onNavigateToSettings
+                    )
+                    QuickActionCard(
+                        title = "Chat",
+                        subtitle = "Unified Inbox for WhatsApp, IG & Email",
+                        icon = Icons.Default.Email,
+                        color = Color(0xFFE91E63),
+                        onClick = component.onNavigateToChat
+                    )
+                    QuickActionCard(
+                        title = "Content (ACF)",
+                        subtitle = "Manage website text, banners & USPs",
+                        icon = Icons.Default.Edit,
+                        color = Color(0xFF00BCD4),
+                        onClick = component.onNavigateToContent
+                    )
+                    QuickActionCard(
+                        title = "Bookkeeping",
+                        subtitle = "Track revenue, VAT, fees & margins",
+                        icon = Icons.Default.AccountBalance,
+                        color = Color(0xFFFF5722), // Deep Orange
+                        onClick = component.onNavigateToBookkeeping
                     )
                 }
             }
@@ -206,6 +255,109 @@ fun DashboardScreen(component: DashboardComponent) {
             ) {
                 CircularProgressIndicator(color = SpotOnOrange)
             }
+        }
+    }
+}
+
+@Composable
+private fun SystemHealthCard(system: com.spoton.cms.domain.model.BackendSystemInfo) {
+    val hosting = system.hosting
+    val isOnline = hosting.status == "connected"
+    val healthColor = if (isOnline) Color(0xFF4CAF50) else Color(0xFFF44336)
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(GlassColors.cardBackground)
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(healthColor)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Infrastructure Health",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+            Text(
+                text = hosting.provider,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // SSL Status
+            HealthIndicator(
+                label = "SSL Status",
+                value = if (hosting.ssl?.active == true) "Secure" else "Inactive",
+                icon = Icons.Default.CheckCircle,
+                color = if (hosting.ssl?.active == true) Color(0xFF4CAF50) else Color(0xFFF44336),
+                modifier = Modifier.weight(1f)
+            )
+            
+            // Disk Usage (if available)
+            hosting.usage?.disk?.let { disk ->
+                HealthIndicator(
+                    label = "Disk Usage",
+                    value = "${disk.percent?.toInt() ?: 0}%",
+                    icon = Icons.Default.Info,
+                    color = when {
+                        (disk.percent ?: 0.0) > 90.0 -> Color(0xFFF44336)
+                        (disk.percent ?: 0.0) > 70.0 -> Color(0xFFFF9800)
+                        else -> Color(0xFF4CAF50)
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HealthIndicator(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(color.copy(alpha = 0.1f))
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
+                color = color
+            )
         }
     }
 }
@@ -294,7 +446,7 @@ private fun QuickActionCard(
             )
         }
         Icon(
-            Icons.Default.KeyboardArrowRight,
+            Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
         )

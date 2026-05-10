@@ -30,9 +30,13 @@ class LoginComponent(
 
     private val _state = MutableStateFlow(
         State(
-            serverUrl = authRepository.currentServerUrl.ifBlank { "https://bait-webshop.test" },
-            username = "admin",
-            password = "password"
+            serverUrl = when {
+                authRepository.currentServerUrl.contains(".test") -> "https://backend.spotonbaits.nl"
+                authRepository.currentServerUrl.isBlank() -> "https://backend.spotonbaits.nl"
+                else -> authRepository.currentServerUrl
+            },
+            username = "",
+            password = ""
         )
     )
     val state: StateFlow<State> = _state.asStateFlow()

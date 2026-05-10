@@ -1,0 +1,11 @@
+-- Migration from version 1 to 2
+-- Adding Expense table for bookkeeping
+
+CREATE TABLE IF NOT EXISTS Expense (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount REAL NOT NULL,
+    category TEXT NOT NULL,
+    description TEXT,
+    date INTEGER NOT NULL,
+    receiptImageUri TEXT
+);

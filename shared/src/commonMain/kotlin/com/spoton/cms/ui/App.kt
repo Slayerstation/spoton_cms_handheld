@@ -29,6 +29,10 @@ fun App(rootComponent: RootComponent) {
                 is RootComponent.Child.Articles -> ArticlesScreen(instance.component)
                 is RootComponent.Child.ArticleDetail -> ArticleDetailScreen(instance.component)
                 is RootComponent.Child.Styles -> StylesScreen(instance.component)
+                is RootComponent.Child.Settings -> SettingsScreen(instance.component)
+                is RootComponent.Child.Chat -> ChatScreen(instance.component)
+                is RootComponent.Child.Content -> ContentScreen(instance.component)
+                is RootComponent.Child.Bookkeeping -> BookkeepingScreen(instance.component)
             }
         }
     }

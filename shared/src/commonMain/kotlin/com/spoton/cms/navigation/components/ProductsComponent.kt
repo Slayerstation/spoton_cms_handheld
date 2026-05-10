@@ -108,4 +108,14 @@ class ProductsComponent(
             )
         }
     }
+
+    fun quickUpdateStock(id: Long, increment: Int) {
+        scope.launch {
+            val product = _state.value.products.find { it.id == id } ?: return@launch
+            val newStock = (product.stockQuantity ?: 0) + increment
+            productRepository.updateStock(id, newStock).onSuccess {
+                loadProducts(_state.value.searchQuery.ifBlank { null })
+            }
+        }
+    }
 }

@@ -11,6 +11,10 @@ data class Order(
     @SerialName("date_created")
     val dateCreated: String = "",
     val total: String = "0.00",
+    @SerialName("total_tax")
+    val totalTax: String = "0.00",
+    @SerialName("shipping_total")
+    val shippingTotal: String = "0.00",
     @SerialName("currency_symbol")
     val currencySymbol: String = "€",
     val billing: OrderAddress? = null,
@@ -29,7 +33,9 @@ data class Order(
     val billingWeightKg: Double = 0.0,
     val carrierRates: List<CarrierRate> = emptyList(),
     val bestRate: CarrierRate? = null
-)
+) {
+    val totalItems: Int get() = lineItems.sumOf { it.quantity }
+}
 
 @Serializable
 data class CarrierRate(

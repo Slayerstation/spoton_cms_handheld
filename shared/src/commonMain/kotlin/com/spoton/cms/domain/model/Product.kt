@@ -40,6 +40,7 @@ data class Product(
     val threshold: Int get() = getMetaValue("_spoton_threshold")?.toIntOrNull() ?: 5
     val ingredients: List<String> get() = getMetaValue("_spoton_ingredients")?.split("\n")?.filter { it.isNotBlank() } ?: emptyList()
     val specifications: List<String> get() = getMetaValue("_spoton_specifications")?.split("\n")?.filter { it.isNotBlank() } ?: emptyList()
+    val costPrice: Double get() = getMetaValue("_spoton_cost_price")?.toDoubleOrNull() ?: 0.0
 }
 
 @Serializable

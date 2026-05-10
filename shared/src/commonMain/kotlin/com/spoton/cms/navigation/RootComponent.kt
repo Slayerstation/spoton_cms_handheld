@@ -47,6 +47,10 @@ class RootComponent(
                     onNavigateToInventory = { navigation.push(Config.Inventory) },
                     onNavigateToArticles = { navigation.push(Config.Articles) },
                     onNavigateToStyles = { navigation.push(Config.Styles) },
+                    onNavigateToSettings = { navigation.push(Config.Settings) },
+                    onNavigateToChat = { navigation.push(Config.Chat) },
+                    onNavigateToContent = { navigation.push(Config.Content) },
+                    onNavigateToBookkeeping = { navigation.push(Config.Bookkeeping) },
                     onLogout = {
                         settingsManager.clearAuth()
                         navigation.replaceAll(Config.Login)
@@ -109,6 +113,30 @@ class RootComponent(
                     onBack = { navigation.pop() }
                 )
             )
+            is Config.Settings -> Child.Settings(
+                SettingsComponent(
+                    componentContext = componentContext,
+                    onBack = { navigation.pop() }
+                )
+            )
+            is Config.Chat -> Child.Chat(
+                ChatComponent(
+                    componentContext = componentContext,
+                    onBack = { navigation.pop() }
+                )
+            )
+            is Config.Content -> Child.Content(
+                ContentComponent(
+                    componentContext = componentContext,
+                    onBack = { navigation.pop() }
+                )
+            )
+            is Config.Bookkeeping -> Child.Bookkeeping(
+                BookkeepingComponent(
+                    componentContext = componentContext,
+                    onBack = { navigation.pop() }
+                )
+            )
         }
     }
 
@@ -126,6 +154,10 @@ class RootComponent(
         @Serializable data class OrderDetail(val orderId: Long) : Config
         @Serializable data object Inventory : Config
         @Serializable data object Styles : Config
+        @Serializable data object Settings : Config
+        @Serializable data object Chat : Config
+        @Serializable data object Content : Config
+        @Serializable data object Bookkeeping : Config
     }
 
     // ── Child sealed class ──────────────────────────────────────────
@@ -141,5 +173,9 @@ class RootComponent(
         data class OrderDetail(val component: OrderDetailComponent) : Child
         data class Inventory(val component: InventoryComponent) : Child
         data class Styles(val component: StylesComponent) : Child
+        data class Settings(val component: SettingsComponent) : Child
+        data class Chat(val component: ChatComponent) : Child
+        data class Content(val component: ContentComponent) : Child
+        data class Bookkeeping(val component: BookkeepingComponent) : Child
     }
 }

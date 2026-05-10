@@ -1,15 +1,15 @@
 package com.spoton.cms.domain.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class User(
-    val id: Long,
     val username: String,
-    val email: String,
-    val displayName: String,
-    val token: String,
-    val refreshToken: String? = null
+    @SerialName("user_email") val email: String,
+    @SerialName("user_nicename") val nicename: String,
+    @SerialName("user_display_name") val displayName: String,
+    val token: String
 )
 
 @Serializable
@@ -21,5 +21,7 @@ data class LoginRequest(
 @Serializable
 data class AuthToken(
     val token: String,
-    val refreshToken: String? = null
+    @SerialName("user_email") val userEmail: String? = null,
+    @SerialName("user_nicename") val userNicename: String? = null,
+    @SerialName("user_display_name") val userDisplayName: String? = null
 )

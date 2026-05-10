@@ -1,0 +1,63 @@
+name: AltStore Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'zulu'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Build IPA
+        run: |
+          chmod +x iosApp/build_ipa.sh
+          ./iosApp/build_ipa.sh
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: iosApp/build/iosApp.ipa
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update AltStore Source Metadata
+        run: |
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/v//')
+          DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/iosApp.ipa"
+          
+          # Update version, date, and download URL in apps.json
+          # Note: Requires jq to be installed (available on macos runners)
+          jq --arg ver "$VERSION" \
+             --arg date "$DATE" \
+             --arg url "$DOWNLOAD_URL" \
+             '.apps[0].version = $ver | .apps[0].versionDate = $date | .apps[0].downloadURL = $url' \
+             distribution/apps.json > distribution/apps.json.tmp && mv distribution/apps.json.tmp distribution/apps.json
+
+      - name: Commit Updated Source
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add distribution/apps.json
+          git commit -m "chore: update AltStore source to $VERSION"
+          git push origin HEAD:main

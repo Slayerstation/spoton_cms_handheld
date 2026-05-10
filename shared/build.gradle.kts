@@ -33,8 +33,8 @@ kotlin {
             implementation(compose.materialIconsExtended)
 
             // Decompose
-            implementation(libs.decompose)
-            implementation(libs.decompose.compose)
+            api(libs.decompose)
+            api(libs.decompose.compose)
             
             // Rich Text Editor
             implementation(libs.richeditor)
@@ -50,9 +50,9 @@ kotlin {
             implementation(libs.sqldelight.coroutines)
 
             // Koin
-            implementation(libs.koin.core)
-            implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
+            api(libs.koin.core)
+            api(libs.koin.compose)
+            api(libs.koin.compose.viewmodel)
 
             // KotlinX
             implementation(libs.kotlinx.coroutines.core)
@@ -79,7 +79,7 @@ kotlin {
             implementation(libs.sqldelight.android.driver)
 
             // Koin
-            implementation(libs.koin.android)
+            api(libs.koin.android)
 
             // AndroidX
             api(libs.androidx.activity.compose)
@@ -90,6 +90,7 @@ kotlin {
             implementation(libs.androidx.camera.camera2)
             implementation(libs.androidx.camera.lifecycle)
             implementation(libs.androidx.camera.view)
+            implementation(libs.androidx.biometric)
 
             // ML Kit Barcode
             implementation(libs.mlkit.barcode)

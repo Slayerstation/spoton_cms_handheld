@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -89,7 +90,10 @@ fun OrdersScreen(component: OrdersComponent) {
                     CircularProgressIndicator(color = SpotOnOrange)
                 }
             } else {
-                LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
                     items(state.orders) { order ->
                         Row(
                             modifier = Modifier
@@ -102,15 +106,73 @@ fun OrdersScreen(component: OrdersComponent) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "#${order.number}",
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                                )
-                                Text(
-                                    text = order.billing?.fullName ?: "Unknown",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "#${order.number}",
+                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                    Surface(
+                                        color = SpotOnOrange.copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text(
+                                            text = "${order.totalItems} items",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = SpotOnOrange,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+
+                                    if (order.isB2B) {
+                                        Surface(
+                                            color = Color(0xFF673AB7).copy(alpha = 0.1f),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Text(
+                                                text = "B2B",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = Color(0xFF9575CD),
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+
+                                    if (order.billingWeightKg > 0) {
+                                        Surface(
+                                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
+                                            shape = RoundedCornerShape(8.dp)
+                                        ) {
+                                            Text(
+                                                text = "${order.billingWeightKg}kg",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    val city = order.billing?.city ?: ""
+                                    Text(
+                                        text = if (city.isNotBlank()) "${order.billing?.fullName} • $city" else (order.billing?.fullName ?: "Unknown"),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                    if (order.customerNote.isNotBlank()) {
+                                        Icon(
+                                            imageVector = Icons.Default.Description,
+                                            contentDescription = "Has Note",
+                                            tint = SpotOnOrange,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                    }
+                                }
                                 Text(
                                     text = order.dateCreated,
                                     style = MaterialTheme.typography.labelSmall,
@@ -130,12 +192,23 @@ fun OrdersScreen(component: OrdersComponent) {
                                     OrderStatus.CANCELLED -> Color(0xFFF44336)
                                     else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                 }
-                                Text(
-                                    text = order.status.name.lowercase().replace("_", " ")
-                                        .replaceFirstChar { it.uppercase() },
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = statusColor
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(statusColor)
+                                    )
+                                    Text(
+                                        text = order.status.name.lowercase().replace("_", " ")
+                                            .replaceFirstChar { it.uppercase() },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = statusColor
+                                    )
+                                }
                             }
                         }
                     }

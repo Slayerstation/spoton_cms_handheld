@@ -7,4 +7,5 @@ import org.koin.dsl.module
 
 actual val platformModule: Module = module {
     singleOf(::DatabaseDriverFactory)
+    // ImagePicker is registered in MainActivity because it needs ComponentActivity
 }

@@ -124,3 +124,92 @@ DELETE FROM ArticleDraft WHERE wp_id = ?;
 
 deleteAllDrafts:
 DELETE FROM ArticleDraft;
+
+-- Chat Queries
+
+CREATE TABLE IF NOT EXISTS MessageCache (
+    id TEXT NOT NULL PRIMARY KEY,
+    channel TEXT NOT NULL, -- 'whatsapp', 'instagram', 'messenger', 'email'
+    senderName TEXT NOT NULL,
+    senderId TEXT NOT NULL,
+    content TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    isRead INTEGER NOT NULL DEFAULT 0,
+    isOutgoing INTEGER NOT NULL DEFAULT 0,
+    threadId TEXT NOT NULL -- To group messages
+);
+
+getMessages:
+SELECT * FROM MessageCache ORDER BY timestamp DESC;
+
+getMessagesByThread:
+SELECT * FROM MessageCache WHERE threadId = ? ORDER BY timestamp ASC;
+
+getUnreadCount:
+SELECT COUNT(*) FROM MessageCache WHERE isRead = 0;
+
+insertMessage:
+INSERT OR REPLACE INTO MessageCache(id, channel, senderName, senderId, content, timestamp, isRead, isOutgoing, threadId)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+markAsRead:
+UPDATE MessageCache SET isRead = 1 WHERE threadId = ?;
+
+deleteMessage:
+DELETE FROM MessageCache WHERE id = ?;
+
+deleteAllMessages:
+DELETE FROM MessageCache;
+
+-- Content Management Queries
+
+CREATE TABLE IF NOT EXISTS ContentDraft (
+    groupKey TEXT NOT NULL,
+    fieldKey TEXT NOT NULL,
+    fieldValue TEXT NOT NULL, -- JSON or string representation
+    lastModified INTEGER NOT NULL,
+    PRIMARY KEY(groupKey, fieldKey)
+);
+
+getContentDraftsByGroup:
+SELECT * FROM ContentDraft WHERE groupKey = ?;
+
+getContentDraft:
+SELECT * FROM ContentDraft WHERE groupKey = ? AND fieldKey = ?;
+
+insertContentDraft:
+INSERT OR REPLACE INTO ContentDraft(groupKey, fieldKey, fieldValue, lastModified)
+VALUES (?, ?, ?, ?);
+
+deleteContentDraft:
+DELETE FROM ContentDraft WHERE groupKey = ? AND fieldKey = ?;
+
+deleteContentDraftsByGroup:
+DELETE FROM ContentDraft WHERE groupKey = ?;
+
+deleteAllContentDrafts:
+DELETE FROM ContentDraft;
+
+-- Bookkeeping Queries
+
+CREATE TABLE IF NOT EXISTS Expense (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount REAL NOT NULL,
+    category TEXT NOT NULL,
+    description TEXT,
+    date INTEGER NOT NULL,
+    receiptImageUri TEXT
+);
+
+insertExpense:
+INSERT INTO Expense(amount, category, description, date, receiptImageUri)
+VALUES (?, ?, ?, ?, ?);
+
+getAllExpenses:
+SELECT * FROM Expense ORDER BY date DESC;
+
+getExpensesByDateRange:
+SELECT * FROM Expense WHERE date >= ? AND date <= ? ORDER BY date DESC;
+
+deleteExpense:
+DELETE FROM Expense WHERE id = ?;
